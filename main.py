@@ -51,7 +51,6 @@ for i, queries_tables in enumerate(dataset.train_samples):
         fig_name, bbfig_name, bbox_list = _
         plot_list[i]=(fig_name, bbfig_name, bbox_list)
         # break 
-    # if i>300: break
 save_bbox(plot_list, "train")
 
 print("total possible line plots:", Counter(cnt))
@@ -69,6 +68,5 @@ for i, queries_tables in enumerate(dataset.dev_samples):
         plot_list[i]=(fig_name, bbfig_name, bbox_list)
         # break
 save_bbox(plot_list, "dev")
-
 
 print("total possible line plots:", Counter(cnt))

@@ -45,7 +45,7 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
     
     matplotlib.rcParams['font.family'] ='Malgun Gothic'
     matplotlib.rcParams['axes.unicode_minus'] = False
-    plt.clf()
+    # plt.clf()
     plt.rcParams['figure.dpi'] = 200
     plt.rcParams['savefig.dpi'] = 200
     fig, ax = plt.subplots()
@@ -67,7 +67,6 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
     plt.legend(handles, labels)
 
     plt.tight_layout()
-
     fig_name = f'./{file_names[0]}/{file_names[0]}_{index}.png'
     bbfig_name = f'./{file_names[1]}/{file_names[1]}_{index}.png'
     # plt.savefig(fig_name, dpi=200, bbox_inches='tight', pad_inches=0)
@@ -75,6 +74,8 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
 
     bbox = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     plt_size = bbox.width*fig.dpi, bbox.width*fig.dpi
+    # print(bbox.width, bbox.width, fig.dpi)
+    # print(plt_size)
     plt_dict = {
         "plt_size": plt_size,
         "p_text": p_text,
