@@ -12,6 +12,7 @@ from tqdm import tqdm
 from time import time
 from collections import defaultdict
 from IPython import embed
+import matplotlib.colors as mcolors
 
 from PIL import Image, ImageDraw
 
@@ -126,24 +127,70 @@ def load_dict(filename):
 # pip install six numpy scipy Pillow matplotlib scikit-image opencv-python imageio Shapely
 # pip install imgaug
 
-import imgaug as ia
-from imgaug import augmenters as iaa
-import cv2
-import matplotlib.colors as mcolors
-
-def visual_bbox(table_plt_file, bbox_list):
+def visual_bbox(bbox_list, fig_name, bbfig_name):
     #-------------------------Example-------------------------#
     color_names = list(mcolors.CSS4_COLORS)
-    img = Image.open(table_plt_file).convert('RGB')
+    img = Image.open(fig_name).convert('RGB')
     draw = ImageDraw.Draw(img)
-    for i, bbox_theme in enumerate(bbox_list):
-        for bb in bbox_theme:
-            # print((box[0][0], box[0][1], box[1][0], box[1][1]))
+    for i, (k, v) in enumerate(bbox_list.items()):
+        for bb in bbox_list[k]:
             draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[i], width = 5)
-
+    img.save(bbfig_name)
     # img.show()
     # img.save(f'./line_bbox/linebbox_{index}.png')
     return 
 
-def save_bbox(bbox_list): #save to json file
+def save_bbox(plot_list, data_mode):
+    if data_mode == "train": 
+        path = './KorWikiTQ/KorWikiTQ_ko_train.json'
+        save_path = './KorWikiTQ/new_KorWikiTQ_ko_train.json'
+    else:
+        path = './KorWikiTQ/KorWikiTQ_ko_dev.json'
+        save_path = './KorWikiTQ/new_KorWikiTQ_ko_dev.json'
+
+    with open(path, 'rt', encoding='UTF8') as f:
+        data = json.load(f)
+        for i, prob in enumerate(data['data']):
+            if i in plot_list:
+                prob["PNG_PATH"] = plot_list[i][0]
+                prob["BBPNG_PATH"] = plot_list[i][1]
+                prob["BB_CLS"] = dict()
+                for j, (k, v) in enumerate(plot_list[i][2].items()):
+                    prob["BB_CLS"][k] = list()
+                    for jj, box in enumerate(v):
+                        bb_cls_key = f"{k}_{jj}"
+                        bb_cls = (bb_cls_key, box)                    
+                        prob["BB_CLS"][k].append(bb_cls)
+
+    with open(save_path, 'w', encoding='UTF8') as f:
+        json.dump(data, f, indent="\t")
     return 
+
+def getIndexes(dfObj, value):
+    # Empty list
+    listOfPos = []
+     
+    # isin() method will return a dataframe with
+    # boolean values, True at the positions   
+    # where element exists
+    result = dfObj.isin([value])
+     
+    # any() method will return
+    # a boolean series
+    seriesObj = result.any()
+ 
+    # Get list of column names where
+    # element exists
+    columnNames = list(seriesObj[seriesObj == True].index)
+    
+    # Iterate over the list of columns and
+    # extract the row index where element exists
+    for col in columnNames:
+        rows = list(result[col][result[col] == True].index)
+ 
+        for row in rows:
+            listOfPos.append((row, col))
+             
+    # This list contains a list tuples with
+    # the index of element in the dataframe
+    return listOfPos[0]
