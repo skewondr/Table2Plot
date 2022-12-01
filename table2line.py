@@ -79,7 +79,7 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
     plt.savefig(fig_name)
 
     bbox = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    plt_size = bbox.width*fig.dpi, bbox.width*fig.dpi
+    plt_size = bbox.width*fig.dpi, bbox.height*fig.dpi
     # print(bbox.width, bbox.width, fig.dpi)
     # print(plt_size)
     plt_dict = {

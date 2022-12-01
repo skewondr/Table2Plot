@@ -134,9 +134,13 @@ def visual_bbox(bbox_list, fig_name, bbfig_name):
     color_names = list(mcolors.CSS4_COLORS)
     img = Image.open(fig_name).convert('RGB')
     draw = ImageDraw.Draw(img)
+    box_color = []
     for i, l in enumerate(bbox_list):
+        bbox_cls = l[0]
+        if bbox_cls not in box_color:
+            box_color.append(bbox_cls)
         bb = l[1]
-        draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[i], width = 5)
+        draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[len(box_color)], width = 5)
     img.save(bbfig_name)
     # img.show()
     # img.save(f'./line_bbox/linebbox_{index}.png')
