@@ -10,6 +10,7 @@ import matplotlib.colors as mcolors
 from utils import visual_bbox, getIndexes
 from collections import Counter
 from matplotlib.ticker import FormatStrFormatter
+import matplotlib.lines as mlines
 
 def get_Condition(table, question, answer):
     table_ = table.copy()
@@ -54,10 +55,11 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
         return error, None 
 
     acol, acol2 = _
+    cand = [j for j in list(table.columns) if j!=acol and j!=acol2]
+    rand_col = random.choice(cand)
     value_y = []
-    value_y_cols = []
     value_y = list(table[acol].astype(float).values)
-    value_y_cols = acol
+    value_y_cols = rand_col
     value_x = list(table[acol2].values)
     value_x_cols = acol2
     # cand = [j for j in list(table.columns) if j!=acol]
@@ -74,44 +76,68 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     plt.rcParams['figure.dpi'] = 200
     plt.rcParams['savefig.dpi'] = 200
     fig, ax = plt.subplots()
-    fig.set_figwidth(15)
     # value_x = np.arange(len(value_y))
-
-    labels = [value_y_cols]
+    #-----------------------------------------------------------#
+    #select 1~2 line proxy plot 
+    proxy_n = sample([0, 1, 2], 1)[0]
+    value_y_list = [value_y] 
+    headers = [acol]
+    if proxy_n > 0:
+        for i in range(proxy_n):
+            proxy_value_y = np.array(value_y) + ((max(value_y)-min(value_y))/10)*(i+1)
+            for j in range(len(value_y)):
+                proxy_value_y[j] += random.uniform(-2*((max(value_y)-min(value_y))/10),2*(max(value_y)-min(value_y))/10)
+        value_y_list.append(proxy_value_y)
+        headers.append(f"수치 {i+1}")
+    flatten = [item for sublist in value_y_list for item in sublist]
+    min_y, max_y = min(flatten), max(flatten)
+    #-----------------------------------------------------------#
+    #-----------------------------------------------------------#
+    lines_array = list(matplotlib.lines.lineStyles.keys())
+    markers_array = list(matplotlib.markers.MarkerStyle.markers.keys())
+    l, m = sample(lines_array[:3], len(value_y_list)), sample(markers_array[:5], len(value_y_list))
     cm = plt.get_cmap('gist_rainbow')
-    color_list = cm(random.uniform(0,1)) 
-    plt.style.use(sample(plt.style.available, 1))
+    c = [cm(random.uniform(0,1)) for i in range(len(value_y_list))]
+    handles = [mlines.Line2D([], [], color=c[i], marker=m[i], linestyle=l[i], linewidth=1.5) for i in range(len(value_y_list))]
+    plt.legend(handles, headers)
+    plt.style.use(sample(plt.style.available, 1)[0])
+    #-----------------------------------------------------------#
+    p_texts = []
+    for i, y in enumerate(value_y_list):
+        plt.plot(np.arange(len(value_x)), y, color=c[i], marker=m[i], linestyle=l[i])
+        p_text = []
+        for x, y in zip(np.arange(len(value_x)), y):
+            p_text.append(plt.text(x, y, f'{y:.2f}'))
+        p_texts.append(p_text)
 
-    plt.plot(np.arange(len(value_x)), value_y, color = color_list)
     plt.xlabel(value_x_cols)
     plt.ylabel(value_y_cols)
-    # plt.xticks(np.arange(len(value_x)), labels=value_x) 
     plt.xticks(np.arange(len(value_x)), labels=value_x) 
-    y_tick = np.arange(min(value_y), max(value_y)+(max(value_y)-min(value_y))/10, (max(value_y)-min(value_y))/10)
+    y_tick = np.arange(min_y, max_y+(max_y-min_y)/10, (max_y-min_y)/10)
     plt.yticks(y_tick, labels=[str(y) for y in y_tick]) 
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-    p_text = []
-    for x, y in zip(np.arange(len(value_x)), value_y):
-        p_text.append(plt.text(x, y, f'{y:.2f}'))
     
-    handles = [plt.Rectangle((0,0), 0, 0, color=color_list) for i, label in enumerate(labels)]
-    plt.legend(handles, labels)
-
+    # handles = [plt.Rectangle((0,0), 0, 0, color=c[i]) for i, _ in enumerate(value_y_list)]
     plt.tight_layout()
     fig_name = f'./{file_names[0]}/{file_names[0]}_{index}.png'
     bbfig_name = f'./{file_names[1]}/{file_names[1]}_{index}.png'
+
+    zoom = 2
+    w, h = fig.get_size_inches()
+    fig.set_size_inches(w * zoom, h * zoom)
+    
+    bbox = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    plt_size = bbox.width*fig.dpi, bbox.height*fig.dpi
     # plt.savefig(fig_name, dpi=200, bbox_inches='tight', pad_inches=0)
     plt.savefig(fig_name)
 
-    bbox = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    plt_size = bbox.width*fig.dpi, bbox.height*fig.dpi
     # print(bbox.width, bbox.width, fig.dpi)
     # print(plt_size)
     plt_dict = {
         "plt_size": plt_size,
-        "p_text": p_text,
+        "p_text": p_texts,
         "x_value": value_x,
-        "y_value": value_y,
+        "y_value": value_y_list,
         "x_label": value_x_cols,
         "y_label": value_y_cols,
         "y_tick": y_tick,
@@ -128,7 +154,7 @@ def Line_bbox(ax, **kwargs):
     width, height = kwargs["plt_size"]
     p_text = kwargs["p_text"]
     value_x = kwargs["x_value"]
-    value_y = kwargs["y_value"]
+    value_y_list = kwargs["y_value"]
     x_label = kwargs["x_label"]
     y_label = kwargs["y_label"]
     y_tick = kwargs["y_tick"]
@@ -152,12 +178,13 @@ def Line_bbox(ax, **kwargs):
         bbox_list.append(("y_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(y_tick[i])))
 
     #line value
-    for i, l in enumerate(p_text):
-        box = np.array(l.get_window_extent().get_points())
-        bbox_list.append(("val", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(l.get_text())))
+    for i in p_text:
+        for j, l in enumerate(i):
+            box = np.array(l.get_window_extent().get_points())
+            bbox_list.append(("val", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(l.get_text())))
 
     #visual legend
-    for i, patch in enumerate(ax.get_legend().get_patches()):
+    for i, patch in enumerate(ax.get_legend().get_lines()):
         box = np.array(patch.get_window_extent().get_points())
         bbox_list.append(("v_legend", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], None))
 
@@ -167,12 +194,12 @@ def Line_bbox(ax, **kwargs):
         bbox_list.append(("t_legend", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(label.get_text())))
 
     x = np.arange(len(value_x))
-    y = value_y
-    for index, (i, j) in enumerate(zip(x, y)): #sub lines
-        xmin, ymin = ax.transData.transform((i, j))
-        xmax, ymax = ax.transData.transform((x[index+1], y[index+1]))
-        bbox_list.append(("line_0", [xmin, height-ymin, xmax, height-ymax], None))
-        if index == len(x)-2: break
+    for idx, y in enumerate(value_y_list):
+        for index, (i, j) in enumerate(zip(x, y)): #sub lines
+            xmin, ymin = ax.transData.transform((i, j))
+            xmax, ymax = ax.transData.transform((x[index+1], y[index+1]))
+            bbox_list.append((f"line_{idx}", [xmin, height-ymin, xmax, height-ymax], None))
+            if index == len(x)-2: break
 
     return bbox_list
 

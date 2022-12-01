@@ -128,10 +128,14 @@ def load_pickle(filename):
 
 # pip install six numpy scipy Pillow matplotlib scikit-image opencv-python imageio Shapely
 # pip install imgaug
+import matplotlib
+import random 
 
 def visual_bbox(bbox_list, fig_name, bbfig_name):
     #-------------------------Example-------------------------#
-    color_names = list(mcolors.CSS4_COLORS)
+    color_names = list(matplotlib.colors.cnames.keys())
+    random.shuffle(color_names)
+    # color_names = list(mcolors.CSS4_COLORS)
     img = Image.open(fig_name).convert('RGB')
     draw = ImageDraw.Draw(img)
     box_color = []
@@ -139,6 +143,7 @@ def visual_bbox(bbox_list, fig_name, bbfig_name):
         bbox_cls = l[0]
         if bbox_cls not in box_color:
             box_color.append(bbox_cls)
+            # print(bbox_cls, color_names[len(box_color)])
         bb = l[1]
         draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[len(box_color)], width = 5)
     img.save(bbfig_name)
