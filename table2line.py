@@ -8,9 +8,11 @@ from PIL import Image, ImageDraw
 import random 
 import matplotlib.colors as mcolors
 from utils import visual_bbox, getIndexes
+from collections import Counter
+from matplotlib.ticker import FormatStrFormatter
 
-def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
-    #-------------------------Example-------------------------#
+def get_Condition(table, question, answer):
+    table_ = table.copy()
     try: #is the answer included in the table?
         arow, acol = getIndexes(table, answer)
     except:
@@ -24,7 +26,6 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
             continue
     if cnt == 0:
         return 2, None
-
     try: #can the answer be extracted as num value? 
         answer = float(answer)
     except:
@@ -32,44 +33,68 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
     try: #is the answer column available?
         table[acol] = table[acol].astype(float)
     except:
-        return 3, None
+        return 4, None
+    #does the answer column not informative?
+    v = np.diff(table[acol])
+    if len(Counter(v).values()) == 1:
+        return 5, None
+    #find possible column 2
+    try: 
+        arows = [str(i) for i in table.iloc[arow]] 
+        acols = [i for i in arows if i in question]
+        _, acol2 = getIndexes(table_, acols[0])
+    except:
+        return 6, None 
+    return 0, (acol, acol2)
 
+def Table2Line(table, index, question, answer, file_names=("line", "line_bbox")):
+    #-------------------------Example-------------------------#
+    error, _ = get_Condition(table.copy(), question, answer)
+    if error > 0:
+        return error, None 
+
+    acol, acol2 = _
     value_y = []
     value_y_cols = []
-    value_y = list(table[acol].values)
+    value_y = list(table[acol].astype(float).values)
     value_y_cols = acol
-    cand = [j for j in list(table.columns) if j!=acol]
-    rand_col = random.choice(cand)
-    value_x = list(table[rand_col].values)
-    value_x_cols = rand_col
-    
+    value_x = list(table[acol2].values)
+    value_x_cols = acol2
+    # cand = [j for j in list(table.columns) if j!=acol]
+    # rand_col = random.choice(cand)
+    # value_x = list(table[rand_col].values)
+    # value_x_cols = rand_col
+
+    print(value_y, value_x)
+    print(question, answer)
+    plt.rc('font', family='Malgun Gothic')
     plt.rcParams['font.family'] ='Malgun Gothic'
     plt.rcParams['axes.unicode_minus'] = False
     # plt.clf()
     plt.rcParams['figure.dpi'] = 200
     plt.rcParams['savefig.dpi'] = 200
     fig, ax = plt.subplots()
+    fig.set_figwidth(15)
     # value_x = np.arange(len(value_y))
 
     labels = [value_y_cols]
     cm = plt.get_cmap('gist_rainbow')
-    color_list = [cm(random.uniform(0,1)) for i, label in enumerate(labels)]
+    color_list = cm(random.uniform(0,1)) 
+    plt.style.use(sample(plt.style.available, 1))
 
-    plt.plot(np.arange(len(value_x)), value_y, color = color_list[0])
+    plt.plot(np.arange(len(value_x)), value_y, color = color_list)
     plt.xlabel(value_x_cols)
     plt.ylabel(value_y_cols)
     # plt.xticks(np.arange(len(value_x)), labels=value_x) 
-    plt.xticks(np.arange(len(value_x))) 
-    try:
-        tick_y = np.arange(min(value_y), max(value_y), (max(value_y)*1.1-min(value_y))/10)
-    except:
-        return 4, None
-    plt.yticks(tick_y) 
+    plt.xticks(np.arange(len(value_x)), labels=value_x) 
+    y_tick = np.arange(min(value_y), max(value_y)+(max(value_y)-min(value_y))/10, (max(value_y)-min(value_y))/10)
+    plt.yticks(y_tick, labels=[str(y) for y in y_tick]) 
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     p_text = []
     for x, y in zip(np.arange(len(value_x)), value_y):
         p_text.append(plt.text(x, y, f'{y:.2f}'))
     
-    handles = [plt.Rectangle((0,0), 0, 0, color=color_list[i]) for i, label in enumerate(labels)]
+    handles = [plt.Rectangle((0,0), 0, 0, color=color_list) for i, label in enumerate(labels)]
     plt.legend(handles, labels)
 
     plt.tight_layout()
@@ -85,28 +110,28 @@ def Table2Line(table, index, answer, file_names=("line", "line_bbox")):
     plt_dict = {
         "plt_size": plt_size,
         "p_text": p_text,
-        "value_x": np.arange(len(value_x)),
-        "value_y": value_y,
+        "x_value": value_x,
+        "y_value": value_y,
         "x_label": value_x_cols,
         "y_label": value_y_cols,
-        "tick_y": tick_y,
+        "y_tick": y_tick,
     }
     bbox_list = Line_bbox(ax, **plt_dict)
-    # visual_bbox(bbox_list, fig_name, bbfig_name)
+    visual_bbox(bbox_list, fig_name, bbfig_name)
     fig.clf()
     plt.close()
-    return 5, (fig_name, bbfig_name, bbox_list)
+    return 0, (fig_name, bbfig_name, bbox_list)
 
 def Line_bbox(ax, **kwargs): 
     #-------------------------Example-------------------------#
     bbox_list=[]
     width, height = kwargs["plt_size"]
     p_text = kwargs["p_text"]
-    value_x = kwargs["value_x"]
-    value_y = kwargs["value_y"]
+    value_x = kwargs["x_value"]
+    value_y = kwargs["y_value"]
     x_label = kwargs["x_label"]
     y_label = kwargs["y_label"]
-    tick_y = kwargs["tick_y"]
+    y_tick = kwargs["y_tick"]
 
     #xlabel
     box = np.array(ax.get_xaxis().get_label().get_window_extent().get_points())
@@ -119,12 +144,12 @@ def Line_bbox(ax, **kwargs):
     #xticklabel
     for i, l in enumerate(ax.get_xticklabels()):
         box = np.array(l.get_window_extent())
-        bbox_list.append(("x_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(i)))
+        bbox_list.append(("x_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(value_x[i])))
 
     #yticklabel
     for i, l in enumerate(ax.get_yticklabels()):
         box = np.array(l.get_window_extent())
-        bbox_list.append(("y_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(tick_y[i])))
+        bbox_list.append(("y_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(y_tick[i])))
 
     #line value
     for i, l in enumerate(p_text):
@@ -141,11 +166,13 @@ def Line_bbox(ax, **kwargs):
         box = np.array(label.get_window_extent().get_points())
         bbox_list.append(("t_legend", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(label.get_text())))
 
-    for index, (i, j) in enumerate(zip(value_x, value_y)): #sub lines
+    x = np.arange(len(value_x))
+    y = value_y
+    for index, (i, j) in enumerate(zip(x, y)): #sub lines
         xmin, ymin = ax.transData.transform((i, j))
-        xmax, ymax = ax.transData.transform((value_x[index+1], value_y[index+1]))
+        xmax, ymax = ax.transData.transform((x[index+1], y[index+1]))
         bbox_list.append(("line_0", [xmin, height-ymin, xmax, height-ymax], None))
-        if index == len(value_x)-2: break
+        if index == len(x)-2: break
 
     return bbox_list
 

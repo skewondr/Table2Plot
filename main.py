@@ -45,9 +45,9 @@ for i, queries_tables in enumerate(dataset.train_samples):
         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
     except:
         continue
-    val, _ = Table2Line(table, i, queries_tables["answer"])
+    val, _ = Table2Line(table, i, queries_tables["question"],  queries_tables["answer"], ("sample", "sample"))
     cnt.append(val)
-    if val == 5:
+    if val == 0:
         fig_name, bbfig_name, bbox_list = _
         plot_list.append(
             {
@@ -58,28 +58,28 @@ for i, queries_tables in enumerate(dataset.train_samples):
                 "bboxes": bbox_list,
             }
         )
-        # break 
+        if i > 300 : break 
 
-for i, queries_tables in enumerate(dataset.dev_samples):
-    try:
-        table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
-    except:
-        continue
-    val, _ = Table2Line(table, i, queries_tables["answer"])
-    cnt.append(val)
-    if val == 5: 
-        fig_name, bbfig_name, bbox_list = _
-        plot_list.append(
-            {
-                "qid": queries_tables["qid"],
-                "question": queries_tables["question"],
-                "answer": queries_tables["answer"],
-                "image": fig_name,
-                "bboxes": bbox_list,
-            }
-        )
-        # break
+# for i, queries_tables in enumerate(dataset.dev_samples):
+#     try:
+#         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
+#     except:
+#         continue
+#     val, _ = Table2Line(table, i, queries_tables["answer"])
+#     cnt.append(val)
+#     if val == 0: 
+#         fig_name, bbfig_name, bbox_list = _
+#         plot_list.append(
+#             {
+#                 "qid": queries_tables["qid"],
+#                 "question": queries_tables["question"],
+#                 "answer": queries_tables["answer"],
+#                 "image": fig_name,
+#                 "bboxes": bbox_list,
+#             }
+#         )
+#         # break
 
-save_pickle(plot_list, "./KorWikiTQ/plot2line")
-# print(load_pickle("./KorWikiTQ/plot2line"))
-print("total possible line plots:", Counter(cnt))
+# save_pickle(plot_list, "./KorWikiTQ/plot2line")
+# # print(load_pickle("./KorWikiTQ/plot2line"))
+# print("total possible line plots:", Counter(cnt))
