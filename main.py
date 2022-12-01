@@ -1,4 +1,4 @@
-from utils import Dataset, save_bbox
+from utils import Dataset, save_pickle, load_pickle
 import pandas as pd
 from table2line import Table2Line
 from collections import Counter
@@ -39,7 +39,7 @@ def get_statics(dataset):
     return 
 
 cnt = []
-plot_list = dict()
+plot_list = []
 for i, queries_tables in enumerate(dataset.train_samples):
     try:
         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
@@ -47,26 +47,39 @@ for i, queries_tables in enumerate(dataset.train_samples):
         continue
     val, _ = Table2Line(table, i, queries_tables["answer"])
     cnt.append(val)
-    if val == 4:
+    if val == 5:
         fig_name, bbfig_name, bbox_list = _
-        plot_list[i]=(fig_name, bbfig_name, bbox_list)
+        plot_list.append(
+            {
+                "qid": queries_tables["qid"],
+                "question": queries_tables["question"],
+                "answer": queries_tables["answer"],
+                "image": fig_name,
+                "bboxes": bbox_list,
+            }
+        )
         # break 
-save_bbox(plot_list, "train")
 
-print("total possible line plots:", Counter(cnt))
-
-plot_list = dict()
 for i, queries_tables in enumerate(dataset.dev_samples):
     try:
         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
     except:
         continue
-    val = Table2Line(table, i, queries_tables["answer"])
+    val, _ = Table2Line(table, i, queries_tables["answer"])
     cnt.append(val)
-    if val == 4: 
+    if val == 5: 
         fig_name, bbfig_name, bbox_list = _
-        plot_list[i]=(fig_name, bbfig_name, bbox_list)
+        plot_list.append(
+            {
+                "qid": queries_tables["qid"],
+                "question": queries_tables["question"],
+                "answer": queries_tables["answer"],
+                "image": fig_name,
+                "bboxes": bbox_list,
+            }
+        )
         # break
-save_bbox(plot_list, "dev")
 
+save_pickle(plot_list, "./KorWikiTQ/plot2line")
+# print(load_pickle("./KorWikiTQ/plot2line"))
 print("total possible line plots:", Counter(cnt))

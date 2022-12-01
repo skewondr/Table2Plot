@@ -70,6 +70,7 @@ class Dataset(BaseDataset):
                     emp_dict["answer"] = prob["QAS"]["answer"]
                     emp_dict["table"] = prob["TBL"]
                     emp_dict["level"] = prob["QAS"]["qid"].split("_")[1]
+                    emp_dict["qid"] = prob["QAS"]["qid"]
                 except: continue
                 # answer_coordinates labeling
                 # answer와 exact match가 되는 cell을 찾아서 answer_coordinates labeling하고, 없으면 건너뛰기
@@ -91,6 +92,7 @@ class Dataset(BaseDataset):
                     emp_dict["answer"] = prob["QAS"]["answer"]
                     emp_dict["table"] = prob["TBL"]
                     emp_dict["level"] = prob["QAS"]["qid"].split("_")[1]
+                    emp_dict["qid"] = prob["QAS"]["qid"]
                 except: continue
                 # answer_coordinates labeling
                 # table_numpy = np.array(prob["TBL"][1:])
@@ -115,12 +117,12 @@ class Dataset(BaseDataset):
 
 import pickle
 
-def save_dict(d, filename):
+def save_pickle(d, filename):
     with open(f'{filename}.pickle', 'wb') as handle:
         pickle.dump(d, handle)
     return
 
-def load_dict(filename):
+def load_pickle(filename):
     with open(f'{filename}.pickle', 'rb') as handle:
         return pickle.load(handle)
 
@@ -132,39 +134,39 @@ def visual_bbox(bbox_list, fig_name, bbfig_name):
     color_names = list(mcolors.CSS4_COLORS)
     img = Image.open(fig_name).convert('RGB')
     draw = ImageDraw.Draw(img)
-    for i, (k, v) in enumerate(bbox_list.items()):
-        for bb in bbox_list[k]:
-            draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[i], width = 5)
+    for i, l in enumerate(bbox_list):
+        bb = l[1]
+        draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[i], width = 5)
     img.save(bbfig_name)
     # img.show()
     # img.save(f'./line_bbox/linebbox_{index}.png')
     return 
 
-def save_bbox(plot_list, data_mode):
-    if data_mode == "train": 
-        path = './KorWikiTQ/KorWikiTQ_ko_train.json'
-        save_path = './KorWikiTQ/new_KorWikiTQ_ko_train.json'
-    else:
-        path = './KorWikiTQ/KorWikiTQ_ko_dev.json'
-        save_path = './KorWikiTQ/new_KorWikiTQ_ko_dev.json'
+# def save_bbox(plot_list, data_mode):
+#     if data_mode == "train": 
+#         path = './KorWikiTQ/KorWikiTQ_ko_train.pickle'
+#         save_path = './KorWikiTQ/new_KorWikiTQ_ko_train.json'
+#     else:
+#         path = './KorWikiTQ/KorWikiTQ_ko_dev.json'
+#         save_path = './KorWikiTQ/new_KorWikiTQ_ko_dev.json'
 
-    with open(path, 'rt', encoding='UTF8') as f:
-        data = json.load(f)
-        for i, prob in enumerate(data['data']):
-            if i in plot_list:
-                prob["PNG_PATH"] = plot_list[i][0]
-                prob["BBPNG_PATH"] = plot_list[i][1]
-                prob["BB_CLS"] = dict()
-                for j, (k, v) in enumerate(plot_list[i][2].items()):
-                    prob["BB_CLS"][k] = list()
-                    for jj, box in enumerate(v):
-                        bb_cls_key = f"{k}_{jj}"
-                        bb_cls = (bb_cls_key, box)                    
-                        prob["BB_CLS"][k].append(bb_cls)
+#     with open(path, 'rt', encoding='UTF8') as f:
+#         data = json.load(f)
+#         for i, prob in enumerate(data['data']):
+#             if i in plot_list:
+#                 prob["PNG_PATH"] = plot_list[i][0]
+#                 prob["BBPNG_PATH"] = plot_list[i][1]
+#                 prob["BB_CLS"] = dict()
+#                 for j, (k, v) in enumerate(plot_list[i][2].items()):
+#                     prob["BB_CLS"][k] = list()
+#                     for jj, box in enumerate(v):
+#                         bb_cls_key = f"{k}_{jj}"
+#                         bb_cls = (bb_cls_key, box)                    
+#                         prob["BB_CLS"][k].append(bb_cls)
 
-    with open(save_path, 'w', encoding='UTF8') as f:
-        json.dump(data, f, indent="\t")
-    return 
+#     with open(save_path, 'w', encoding='UTF8') as f:
+#         json.dump(data, f, indent="\t")
+#     return 
 
 def getIndexes(dfObj, value):
     # Empty list
