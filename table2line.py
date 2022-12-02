@@ -74,9 +74,11 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
 
     # print(value_y, value_x)
     # print(question, answer)
+    ff = [(f.name, f.fname) for f in matplotlib.font_manager.fontManager.ttflist if 'Nanum' in f.name]
+    plt.rcParams['axes.unicode_minus'] = False
     plt.rcParams["figure.figsize"] = (15,8)
-    plt.rc('font', family='Malgun Gothic')
-    plt.rcParams['font.family'] ='Malgun Gothic'
+    plt.rc('font', family='NanumGothic')
+    plt.rcParams['font.family'] = 'NanumGothic'
     BIGGER_SIZE = 50
     plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
     plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
@@ -85,7 +87,6 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     plt.rc('ytick', labelsize=BIGGER_SIZE)    # fontsize of the tick labels
     plt.rc('legend', fontsize=35)    # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-    plt.rcParams['axes.unicode_minus'] = False
     # plt.clf()
     plt.rcParams['figure.dpi'] = 200
     plt.rcParams['savefig.dpi'] = 200
@@ -157,7 +158,7 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     except:
         return 7, None 
     
-    bbox = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    bbox = fig.get_window_extent(None).transformed(fig.dpi_scale_trans.inverted())
     plt_size = bbox.width*fig.dpi, bbox.height*fig.dpi
     # plt.savefig(fig_name, dpi=200, bbox_inches='tight', pad_inches=0)
     plt.savefig(fig_name)
@@ -174,7 +175,7 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
         "y_tick": y_tick,
     }
     bbox_list = Line_bbox(ax, **plt_dict)
-    visual_bbox(bbox_list, fig_name, bbfig_name)
+    # visual_bbox(bbox_list, fig_name, bbfig_name)
     fig.clf()
     plt.close()
     return 0, (fig_name, bbfig_name, bbox_list)
@@ -191,37 +192,37 @@ def Line_bbox(ax, **kwargs):
     y_tick = kwargs["y_tick"]
 
     #xlabel
-    box = np.array(ax.get_xaxis().get_label().get_window_extent().get_points())
+    box = np.array(ax.get_xaxis().get_label().get_window_extent(None).get_points())
     bbox_list.append(("x_label", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(x_label)))
 
     #ylabel
-    box = np.array(ax.get_yaxis().get_label().get_window_extent().get_points())
+    box = np.array(ax.get_yaxis().get_label().get_window_extent(None).get_points())
     bbox_list.append(("y_label", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(y_label)))
 
     #xticklabel
     for i, l in enumerate(ax.get_xticklabels()):
-        box = np.array(l.get_window_extent())
+        box = np.array(l.get_window_extent(None))
         bbox_list.append(("x_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(value_x[i])))
 
     #yticklabel
     for i, l in enumerate(ax.get_yticklabels()):
-        box = np.array(l.get_window_extent())
-        bbox_list.append(("y_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(y_tick[i])))
+        box = np.array(l.get_window_extent(None))
+        bbox_list.append(("y_tick", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(f'{y_tick[i]:.2f}')))
 
     #line value
     for i in p_text:
         for j, l in enumerate(i):
-            box = np.array(l.get_window_extent().get_points())
+            box = np.array(l.get_window_extent(None).get_points())
             bbox_list.append(("val", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(l.get_text())))
 
     #visual legend
     for i, patch in enumerate(ax.get_legend().get_lines()):
-        box = np.array(patch.get_window_extent().get_points())
+        box = np.array(patch.get_window_extent(None).get_points())
         bbox_list.append(("v_legend", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], None))
 
     #text legend
     for i, label in enumerate(ax.get_legend().get_texts()):
-        box = np.array(label.get_window_extent().get_points())
+        box = np.array(label.get_window_extent(None).get_points())
         bbox_list.append(("t_legend", [box[0][0], height-box[0][1], box[1][0], height-box[1][1]], str(label.get_text())))
 
     x = np.arange(len(value_x))
