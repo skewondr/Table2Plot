@@ -83,7 +83,7 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
     plt.rc('xtick', labelsize=35)    # fontsize of the tick labels
     plt.rc('ytick', labelsize=BIGGER_SIZE)    # fontsize of the tick labels
-    plt.rc('legend', fontsize=BIGGER_SIZE)    # legend fontsize
+    plt.rc('legend', fontsize=35)    # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
     plt.rcParams['axes.unicode_minus'] = False
     # plt.clf()
@@ -122,7 +122,7 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     cm = plt.get_cmap('gist_rainbow')
     c = [cm(random.uniform(0,1)) for i in range(len(value_y_list))]
     handles = [mlines.Line2D([], [], color=c[i], marker=m[i], linestyle=l[i], linewidth=10, markersize=35) for i in range(len(value_y_list))]
-    plt.legend(handles, headers, bbox_to_anchor=(0.85,1.025), loc="upper left")
+    plt.legend(handles, headers, bbox_to_anchor=(1.01, 1), loc="upper left")
     plt_style = [x for x in plt.style.available if x not in ["dark_background", "fast", "Solarize_Light2", "seaborn-v0_8-colorblind", "seaborn-v0_8-muted", "seaborn-v0_8-poster"]]
     pic = sample(plt_style, 1)[0]
     # print(index, pic)
@@ -143,9 +143,9 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
     y_tick = np.arange(min_y, max_y+(max_y-min_y)/10, (max_y-min_y)/10)
     plt.yticks(y_tick, labels=[str(y) for y in y_tick]) 
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    plt.xlim([-1, len(value_x)])
+    plt.ylim([min_y-((max_y-min_y)/10), max_y+((max_y-min_y)/10)])
     
-    # handles = [plt.Rectangle((0,0), 0, 0, color=c[i]) for i, _ in enumerate(value_y_list)]
-
     fig_name = f'./{file_names[0]}/{file_names[0]}_{index}.png'
     bbfig_name = f'./{file_names[1]}/{file_names[1]}_{index}.png'
 
@@ -174,7 +174,7 @@ def Table2Line(table, index, question, answer, file_names=("line", "line_bbox"))
         "y_tick": y_tick,
     }
     bbox_list = Line_bbox(ax, **plt_dict)
-    # visual_bbox(bbox_list, fig_name, bbfig_name)
+    visual_bbox(bbox_list, fig_name, bbfig_name)
     fig.clf()
     plt.close()
     return 0, (fig_name, bbfig_name, bbox_list)
