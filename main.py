@@ -2,6 +2,8 @@ from utils import Dataset, save_pickle, load_pickle
 import pandas as pd
 from table2line import Table2Line
 from collections import Counter
+from tqdm import tqdm 
+
 
 dataset = Dataset(data_dir='./', data_name='KorWikiTQ') 
 
@@ -10,7 +12,7 @@ num_answer = []
 error_header = []
 
 def get_statics(dataset):
-    for i, queries_tables in enumerate(dataset.train_samples):
+    for i, queries_tables in tqdm(enumerate(dataset.train_samples), ncols=15):
         try:
             table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
         except:
@@ -40,12 +42,12 @@ def get_statics(dataset):
 
 cnt = []
 plot_list = []
-for i, queries_tables in enumerate(dataset.train_samples):
+for i, queries_tables in tqdm(enumerate(dataset.train_samples), ncols=15):
     try:
         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
     except:
         continue
-    val, _ = Table2Line(table, i, queries_tables["question"],  queries_tables["answer"], ("sample", "sample"))
+    val, _ = Table2Line(table, i, queries_tables["question"],  queries_tables["answer"])
     cnt.append(val)
     if val == 0:
         fig_name, bbfig_name, bbox_list = _
@@ -58,28 +60,28 @@ for i, queries_tables in enumerate(dataset.train_samples):
                 "bboxes": bbox_list,
             }
         )
-        if i > 300 : break 
+        # if i > 500 : break 
 
-# for i, queries_tables in enumerate(dataset.dev_samples):
-#     try:
-#         table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
-#     except:
-#         continue
-#     val, _ = Table2Line(table, i, queries_tables["answer"])
-#     cnt.append(val)
-#     if val == 0: 
-#         fig_name, bbfig_name, bbox_list = _
-#         plot_list.append(
-#             {
-#                 "qid": queries_tables["qid"],
-#                 "question": queries_tables["question"],
-#                 "answer": queries_tables["answer"],
-#                 "image": fig_name,
-#                 "bboxes": bbox_list,
-#             }
-#         )
-#         # break
+for i, queries_tables in enumerate(dataset.dev_samples):
+    try:
+        table = pd.DataFrame.from_records(queries_tables["table"][1:], columns=queries_tables["table"][0]).astype(str)
+    except:
+        continue
+    val, _ = Table2Line(table, i, queries_tables["question"],  queries_tables["answer"])
+    cnt.append(val)
+    if val == 0: 
+        fig_name, bbfig_name, bbox_list = _
+        plot_list.append(
+            {
+                "qid": queries_tables["qid"],
+                "question": queries_tables["question"],
+                "answer": queries_tables["answer"],
+                "image": fig_name,
+                "bboxes": bbox_list,
+            }
+        )
+        # break
 
-# save_pickle(plot_list, "./KorWikiTQ/plot2line")
-# # print(load_pickle("./KorWikiTQ/plot2line"))
-# print("total possible line plots:", Counter(cnt))
+save_pickle(plot_list, "./KorWikiTQ/plot2line")
+# print(load_pickle("./KorWikiTQ/plot2line"))
+print("total possible line plots:", Counter(cnt))
