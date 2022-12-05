@@ -118,12 +118,12 @@ class Dataset(BaseDataset):
 import pickle
 
 def save_pickle(d, filename):
-    with open(f'{filename}.pickle', 'wb') as handle:
+    with open(filename, 'wb') as handle:
         pickle.dump(d, handle)
     return
 
 def load_pickle(filename):
-    with open(f'{filename}.pickle', 'rb') as handle:
+    with open(filename, 'rb') as handle:
         return pickle.load(handle)
 
 # pip install six numpy scipy Pillow matplotlib scikit-image opencv-python imageio Shapely
@@ -131,8 +131,9 @@ def load_pickle(filename):
 import matplotlib
 import random 
 
-def visual_bbox(bbox_list, fig_name, bbfig_name):
+def visual_bbox(bbox_list, plt_size, fig_name, bbfig_name):
     #-------------------------Example-------------------------#
+    width, height = plt_size
     color_names = list(matplotlib.colors.cnames.keys())
     random.shuffle(color_names)
     # color_names = list(mcolors.CSS4_COLORS)
@@ -145,7 +146,7 @@ def visual_bbox(bbox_list, fig_name, bbfig_name):
             box_color.append(bbox_cls)
             # print(bbox_cls, color_names[len(box_color)])
         bb = l[1]
-        draw.rectangle((bb[0], bb[1], bb[2], bb[3]), outline=color_names[len(box_color)], width = 5)
+        draw.rectangle((bb[0], height-bb[1], bb[2], height-bb[3]), outline=color_names[len(box_color)], width = 5)
     img.save(bbfig_name)
     # img.show()
     # img.save(f'./line_bbox/linebbox_{index}.png')
